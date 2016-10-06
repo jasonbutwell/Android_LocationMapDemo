@@ -3,6 +3,7 @@ package com.jasonbutwell.locationmapdemo;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -19,6 +20,10 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
 
@@ -40,11 +45,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         Marker marker = mMap.addMarker(new MarkerOptions().position(yourLocation).title( locationString ).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
 
-        marker.showInfoWindow();    // displays the location string straight away
+        //marker.showInfoWindow();    // displays the location string straight away
+        marker.setAlpha(0.85f);      // Change the opacity of our marker
 
         // move the camera to our current marker and change the zoom level also
         mMap.moveCamera(CameraUpdateFactory.newLatLng( yourLocation ));
         mMap.animateCamera(CameraUpdateFactory.zoomTo( zoomLevel ));
+
+        // Use Geocoder to get address of location
+        Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+
+        try {
+            // We tell it we only want 1 location, but we could have more if needed, added to our list.
+            List<android.location.Address> listAddresses = geocoder.getFromLocation(lat, lon, 1 );
+
+            // If we have a result and list address > 1
+            if ( listAddresses != null && listAddresses.size() > 0 ) {
+                // output to log for debug
+                Log.i("PlaceInfo",listAddresses.get(0).toString());
+
+                // Create strings for the first 3 address lines we want
+                String addressLine1 = listAddresses.get(0).getAddressLine(0);
+                String addressLine2 = listAddresses.get(0).getAddressLine(1);
+                String addressLine3 = listAddresses.get(0).getAddressLine(2);
+
+                // create the whole string and set the title of the current marker
+                marker.setTitle( (addressLine1 + ", "  + addressLine2 + ", " + addressLine3) );
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
